@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Product Category</title>
+</head>
+<body>
+    <div id="category-list">
+        <!-- 分类列表 -->
+    </div>
+    <div id="subcategory-list">
+        <!-- 子分类列表 -->
+    </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // 初始化分类列表
+            $.ajax({
+                url: '/categories',
+                type: 'GET',
+                success: function(response) {
+                    var categories = response.categories;
+                    categories.forEach(function(category) {
+                        $('#category-list').append(
+                            '<div class="category" data-id="' + category.id + '">' + category.name + '</div>'
+                        );
+                    });
+                }
+            });
+
+            // 处理分类点击事件
+            $('#category-list').on('click', '.category', function() {
+                var categoryId = $(this).data('id');
+                $.ajax({
+                    url: '/categories/' + categoryId,
+                    type: 'GET',
+                    success: function(response) {
+                        $('#subcategory-list').empty();
+                        var subcategories = response.subcategories;
+                        subcategories.forEach(function(subcategory) {
+                            $('#subcategory-list').append(
+                                '<p>' + subcategory.name + '</p>'
+                            );
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
