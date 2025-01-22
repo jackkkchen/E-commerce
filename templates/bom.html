@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>物料清单管理</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        /* 页面基础样式 */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            height: 100vh;
+            min-width: 1024px; /* 设置最小宽度 */
+        }
+
+        /* 页面容器 */
+        .page-container {
+            display: flex;
+            gap: 20px;
+            width: 100%; /* 改为100%宽度 */
+            margin: 0 auto;
+            padding: 0 15px;
+            height: calc(100vh - 40px);
+            box-sizing: border-box;
+        }
+
+        /* 主内容区域 */
+        .main-content {
+            flex: 1;
+            min-width: 0; /* 防止flex子项溢出 */
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            max-height: 100%;
+        }
+
+        /* 搜索区域 */
+        .search-section {
+            flex-shrink: 0;
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .search-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* 表格区域 */
+        .table-section {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 20px;
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        /* 表格容器 */
+        .table-container {
+            flex: 1;
+            min-height: 0; /* 重要：允许内容收缩 */
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 表格包装器 */
+        .table-wrapper {
+            height: 100%;
+            overflow: auto;
+        }
+
+        /* 表格样式 */
+        table {
+            width: max-content;
+            min-width: 100%;
+            border-collapse: collapse;
+        }
+
+        /* 表头固定 */
+        thead tr {
+            position: sticky;
+            top: 0;
+            background-color: #f8f9fa;
+            z-index: 1;
+        }
+
+        /* 表格单元格样式 */
+        th, td {
+            padding: 8px 12px;
+            border-bottom: 1px solid #dee2e6;
+            white-space: nowrap;
+        }
+
+        /* 子表列宽设置 */
+        #child-table th:nth-child(1), #child-table td:nth-child(1) { width: 100px; } /* 物料清单编码 */
+        #child-table th:nth-child(2), #child-table td:nth-child(2) { width: 80px; } /* 版本号 */
+        #child-table th:nth-child(3), #child-table td:nth-child(3) { width: 100px; } /* 条码 */
+        #child-table th:nth-child(4), #child-table td:nth-child(4) { width: 120px; } /* 父件预入仓库 */
+        #child-table th:nth-child(5), #child-table td:nth-child(5) { width: 150px; } /* 父件商品 */
+        #child-table th:nth-child(6), #child-table td:nth-child(6) { width: 80px; text-align: right; } /* 生产数量_父件 */
+        #child-table th:nth-child(7), #child-table td:nth-child(7) { width: 120px; } /* 子件预出仓库 */
+        #child-table th:nth-child(8), #child-table td:nth-child(8) { width: 150px; } /* 子件商品 */
+        #child-table th:nth-child(9), #child-table td:nth-child(9) { width: 100px; } /* 规格型号 */
+        #child-table th:nth-child(10), #child-table td:nth-child(10) { width: 120px; } /* 默认供应商 */
+        #child-table th:nth-child(11), #child-table td:nth-child(11) { width: 80px; text-align: right; } /* 生产数量_子件 */
+        #child-table th:nth-child(12), #child-table td:nth-child(12) { width: 80px; } /* 子件版本号 */
+        #child-table th:nth-child(13), #child-table td:nth-child(13) { width: 70px; text-align: center; } /* 计量单位 */
+        #child-table th:nth-child(14), #child-table td:nth-child(14) { width: 80px; text-align: right; } /* 需用数量 */
+        #child-table th:nth-child(15), #child-table td:nth-child(15) { width: 80px; text-align: right; } /* 成本单价 */
+        #child-table th:nth-child(16), #child-table td:nth-child(16) { width: 80px; text-align: right; } /* 成本金额 */
+
+        /* 父表特定样式 */
+        #parent-table {
+            width: 100%;
+            min-width: auto;
+        }
+
+        /* 父表单元格样式 */
+        #parent-table td, 
+        #parent-table th {
+            padding: 8px 12px;
+            border-bottom: 1px solid #dee2e6;
+            white-space: normal; /* 允许文本换行 */
+            word-wrap: break-word; /* 允许长单词换行 */
+            vertical-align: middle;
+            line-height: 1.4;
+        }
+
+        /* 调整父表的列宽 */
+        #parent-table th:nth-child(1), #parent-table td:nth-child(1) { 
+            width: 90px; /* 物料清单编码 */
+            white-space: normal; /* 编码不换行 */
+        }
+        #parent-table th:nth-child(2), #parent-table td:nth-child(2) { 
+            width: 80px; /* 条码 */
+            white-space: normal;
+        }
+        #parent-table th:nth-child(3), #parent-table td:nth-child(3) { 
+            width: 100px; /* 父件预入仓库 */
+        }
+        #parent-table th:nth-child(4), #parent-table td:nth-child(4) { 
+            width: auto; /* 父件商品 */
+            min-width: 150px;
+            max-width: 300px; /* 限制最大宽度 */
+        }
+        #parent-table th:nth-child(5), #parent-table td:nth-child(5) { 
+            width: 80px; /* 生产数量 */
+            text-align: right;
+            white-space: nowrap;
+        }
+        #parent-table th:nth-child(6), #parent-table td:nth-child(6) { 
+            width: 80px; /* 成本金额 */
+            text-align: right;
+            white-space: nowrap;
+        }
+        #parent-table th:nth-child(7), #parent-table td:nth-child(7) { 
+            width: 50px; /* 操作 */
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        /* 保持子表原有样式不变 */
+        #child-table td,
+        #child-table th {
+            white-space: nowrap;
+        }
+
+        /* 保持侧栏表格原有样式不变 */
+        #selected-table td,
+        #selected-table th {
+            word-wrap: break-word;
+            white-space: normal;
+        }
+
+        /* 父表单元格文本溢出处理 */
+        #parent-table td {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 0; /* 确保text-overflow生效 */
+        }
+
+        /* 保持子表原有的滚动行为 */
+        #child-table {
+            width: max-content;
+            min-width: 100%;
+        }
+
+        /* 确保父表容器不会出现横向滚动 */
+        #parent-table-container .table-wrapper {
+            overflow-x: hidden;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 27%;
+            min-width: 280px;
+            max-width: 400px;
+            flex-shrink: 0;
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            height: fit-content;
+            box-sizing: border-box;
+        }
+
+        /* 侧栏标题区域样式 */
+        .sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .sidebar-header h2 {
+            margin: 0;
+            font-size: 18px;
+            color: #333;
+        }
+
+        /* 导出按钮样式 */
+        .export-btn {
+            padding: 4px 12px;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+
+        .export-btn:hover {
+            background-color: #e9ecef;
+        }
+
+        /* 滚动条样式 */
+        .table-wrapper::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        .table-wrapper::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        .table-wrapper::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+
+        .table-wrapper::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        /* 分页控件响应式布局 */
+        .pagination {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        /* 统计结果表格容器样式调整 */
+        .selected-items-table {
+            width: 100%;
+            max-height: 400px; /* 设置最大高度 */
+            overflow-y: auto; /* 只允许垂直滚动 */
+            overflow-x: hidden; /* 禁止水平滚动 */
+        }
+
+        /* 确保表头固定 */
+        #selected-table thead {
+            position: sticky;
+            top: 0;
+            background-color: white;
+            z-index: 1;
+        }
+
+        /* 优化滚动条样式 */
+        .selected-items-table::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .selected-items-table::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        .selected-items-table::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+
+        .selected-items-table::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        /* 统计结果表格样式 */
+        #selected-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        /* 统计结果表格单元格样式 */
+        #selected-table th,
+        #selected-table td {
+            padding: 8px;
+            border-bottom: 1px solid #dee2e6;
+            word-wrap: break-word;
+            white-space: normal;
+            vertical-align: middle;
+        }
+
+        /* 调整统计结果表格列宽 */
+        #selected-table th:nth-child(1),
+        #selected-table td:nth-child(1) {
+            width: 90px; /* 物料清单编码 */
+        }
+
+        #selected-table th:nth-child(2),
+        #selected-table td:nth-child(2) {
+            /* 父件商品列自适应宽度 */
+            min-width: 60px;
+        }
+
+        #selected-table th:nth-child(3),
+        #selected-table td:nth-child(3) {
+            width: 60px; /* 需求数量 */
+        }
+
+        #selected-table th:nth-child(4),
+        #selected-table td:nth-child(4) {
+            width: 50px; /* 操作 */
+            text-align: center;
+        }
+
+        /* 需求数量输入框样式 */
+        #selected-table input.quantity-input {
+            width: 30px;
+            padding: 4px;
+            text-align: right;
+        }
+
+        /* 删除按钮样式 */
+        #selected-table .delete-btn {
+            padding: 4px 8px;
+            white-space: nowrap;
+        }
+
+        /* 翻页按钮样式 */
+        .pagination button {
+            padding: 4px 8px;
+            margin: 0 2px;
+            border: 1px solid #dee2e6;
+            background-color: #fff;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .pagination button:hover {
+            background-color: #e9ecef;
+        }
+
+        /* 页码输入框样式 */
+        .page-input {
+            width: 50px;
+            padding: 4px 8px;
+            margin: 0 5px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        .page-input::-webkit-inner-spin-button,
+        .page-input::-webkit-outer-spin-button {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="page-container">
+        <!-- 主要内容区域 -->
+        <div class="main-content">
+            <div class="search-section">
+                <div class="search-group">
+                    <label for="bom-code">物料清单编号：</label>
+                    <input type="text" 
+                           id="bom-code" 
+                           name="bom-code" 
+                           pattern="\d{7}" 
+                           maxlength="7" 
+                           title="请输入7位数字"
+                           oninput="this.value = this.value.replace(/[^\d]/g, '').slice(0, 7)">
+                    <button class="export-btn" onclick="queryBOM()">查询</button>
+                    <button class="export-btn" onclick="clearQuery()">清除查询</button>
+                </div>
+                <div class="button-group" style="margin-left: auto;">
+                    <input type="file" id="file-upload" accept=".xlsx,.xls" style="display: none;">
+                    <button class="export-btn" onclick="document.getElementById('file-upload').click()">导入数据</button>
+                </div>
+            </div>
+
+            <!-- 父表区域 -->
+            <div class="table-section">
+                <div class="table-header">
+                    <h3>物料清单父件</h3>
+                    <div class="pagination" id="parent-pagination">
+                        <button onclick="changePage('parent', 'first')" id="parent-first">&lt;&lt;</button>
+                        <button onclick="changePage('parent', 'prev')" id="parent-prev">&lt;</button>
+                        <span id="parent-page-info">第 1 页 / 共 1 页</span>
+                        <button onclick="changePage('parent', 'next')" id="parent-next">&gt;</button>
+                        <button onclick="changePage('parent', 'last')" id="parent-last">&gt;&gt;</button>
+                        <input type="number" min="1" class="page-input" id="parent-page-input">
+                        <button onclick="jumpToPage('parent')" class="export-btn">跳转</button>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <div class="table-wrapper">
+                        <table id="parent-table">
+                            <thead>
+                                <tr>
+                                    <th>物料清单编码</th>
+                                    <th>条码</th>
+                                    <th>父件预入仓库</th>
+                                    <th>父件商品</th>
+                                    <th>生产数量</th>
+                                    <th>成本金额</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- 数据将通过 JavaScript 动态加载 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 子表区域 -->
+            <div class="table-section">
+                <div class="table-header">
+                    <h3>物料清单父子件</h3>
+                    <div class="pagination" id="child-pagination">
+                        <button onclick="changePage('child', 'first')" id="child-first">&lt;&lt;</button>
+                        <button onclick="changePage('child', 'prev')" id="child-prev">&lt;</button>
+                        <span id="child-page-info">第 1 页 / 共 1 页</span>
+                        <button onclick="changePage('child', 'next')" id="child-next">&gt;</button>
+                        <button onclick="changePage('child', 'last')" id="child-last">&gt;&gt;</button>
+                        <input type="number" min="1" class="page-input" id="child-page-input">
+                        <button onclick="jumpToPage('child')" class="export-btn">跳转</button>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <div class="table-wrapper">
+                        <table id="child-table">
+                            <thead>
+                                <tr>
+                                    <th>物料清单编码</th>
+                                    <th>版本号</th>
+                                    <th>条码</th>
+                                    <th>父件预入仓库</th>
+                                    <th>父件商品</th>
+                                    <th>生产数量_父件</th>
+                                    <th>子件预出仓库</th>
+                                    <th>子件商品</th>
+                                    <th>规格型号</th>
+                                    <th>默认供应商</th>
+                                    <th>生产数量_子件</th>
+                                    <th>子件版本号</th>
+                                    <th>计量单位</th>
+                                    <th>需用数量</th>
+                                    <th>成本单价</th>
+                                    <th>成本金额</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- 数据将通过 JavaScript 动态加载 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 侧边栏 - 统计结果 -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2>统计结果</h2>
+                <button onclick="exportResults()" class="export-btn">导出</button>
+            </div>
+            <div class="selected-items-table">
+                <table id="selected-table">
+                    <thead>
+                        <tr>
+                            <th>物料清单编码</th>
+                            <th>父件商品</th>
+                            <th>需求数量</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- 动态内容 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加 JavaScript -->
+    <script>
+    // 存储当前页码和数据
+    const state = {
+        parent: { currentPage: 1, data: [] },
+        child: { currentPage: 1, data: [] }
+    };
+
+    const PAGE_SIZE = 200; // 修改为200行每页
+
+    // 加载表格数据
+    async function loadTableData() {
+        try {
+            const retryFetch = async (url, maxRetries = 3) => {
+                for (let i = 0; i < maxRetries; i++) {
+                    try {
+                        const response = await fetch(url);
+                        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                        return await response.json();
+                    } catch (error) {
+                        if (i === maxRetries - 1) throw error;
+                        await new Promise(resolve => setTimeout(resolve, 1000)); // 等待1秒后重试
+                    }
+                }
+            };
+
+            // 加载父表数据
+            const parentData = await retryFetch('/api/parent_table');
+            state.parent.data = parentData;
+            renderTable('parent');
+
+            // 加载子表数据
+            const childData = await retryFetch('/api/child_table');
+            state.child.data = childData;
+            renderTable('child');
+        } catch (error) {
+            console.error('加载数据失败:', error);
+            alert('加载数据失败，请刷新页面重试');
+        }
+    }
+
+    // 渲染表格
+    function renderTable(type) {
+        const tableState = state[type];
+        const startIndex = (tableState.currentPage - 1) * PAGE_SIZE;
+        const endIndex = startIndex + PAGE_SIZE;
+        const pageData = tableState.data.slice(startIndex, endIndex);
+        
+        const tbody = document.querySelector(`#${type}-table tbody`);
+        tbody.innerHTML = '';
+
+        if (pageData.length === 0) {
+            const cols = type === 'parent' ? 7 : 16;
+            tbody.innerHTML = `<tr><td colspan="${cols}" style="text-align: center;">暂无数据</td></tr>`;
+            return;
+        }
+
+        pageData.forEach(row => {
+            const tr = document.createElement('tr');
+            
+            // 定义父表的列顺序
+            if (type === 'parent') {
+                const parentColumns = [
+                    '物料清单编码',
+                    '条码',
+                    '父件预入仓库',
+                    '父件商品',
+                    '生产数量',
+                    '成本金额'
+                ];
+                
+                // 按照指定顺序创建单元格
+                parentColumns.forEach(column => {
+                    const td = document.createElement('td');
+                    td.textContent = row[column] ?? '';
+                    tr.appendChild(td);
+                });
+
+                // 添加操作列
+                const actionTd = document.createElement('td');
+                const addBtn = document.createElement('button');
+                addBtn.className = 'add-btn';
+                addBtn.textContent = '添加';
+                addBtn.onclick = () => addToSelectedTable(row);
+                actionTd.appendChild(addBtn);
+                tr.appendChild(actionTd);
+            } else {
+                // 定义子表的列顺序
+                const childColumns = [
+                    '物料清单编码',
+                    '版本号',
+                    '条码',
+                    '父件预入仓库',
+                    '父件商品',
+                    '生产数量_父件',
+                    '子件预出仓库',
+                    '子件商品',
+                    '规格型号',
+                    '默认供应商',
+                    '生产数量_子件',
+                    '子件版本号',
+                    '计量单位',
+                    '需用数量',
+                    '成本单价',
+                    '成本金额'
+                ];
+
+                // 按照指定顺序创建单元格
+                childColumns.forEach(column => {
+                    const td = document.createElement('td');
+                    td.textContent = row[column] ?? '';
+                    tr.appendChild(td);
+                });
+            }
+
+            tbody.appendChild(tr);
+        });
+
+        updatePagination(type);
+    }
+
+    // 更新分页信息
+    function updatePagination(type) {
+        const tableState = state[type];
+        const totalPages = Math.ceil(tableState.data.length / PAGE_SIZE);
+        
+        // 更新页码输入框最大值
+        const pageInput = document.getElementById(`${type}-page-input`);
+        pageInput.max = totalPages;
+        
+        // 更新首页和上一页按钮状态
+        document.getElementById(`${type}-first`).disabled = tableState.currentPage === 1;
+        document.getElementById(`${type}-prev`).disabled = tableState.currentPage === 1;
+        
+        // 更新下一页和尾页按钮状态
+        document.getElementById(`${type}-next`).disabled = tableState.currentPage === totalPages;
+        document.getElementById(`${type}-last`).disabled = tableState.currentPage === totalPages;
+        
+        // 更新页码信息
+        document.getElementById(`${type}-page-info`).textContent = 
+            `第 ${tableState.currentPage} 页 / 共 ${totalPages} 页`;
+    }
+
+    // 切换页面
+    function changePage(type, direction) {
+        const tableState = state[type];
+        const totalPages = Math.ceil(tableState.data.length / PAGE_SIZE);
+        
+        switch (direction) {
+            case 'first':
+                tableState.currentPage = 1;
+                break;
+            case 'last':
+                tableState.currentPage = totalPages;
+                break;
+            case 'prev':
+                if (tableState.currentPage > 1) {
+                    tableState.currentPage--;
+                }
+                break;
+            case 'next':
+                if (tableState.currentPage < totalPages) {
+                    tableState.currentPage++;
+                }
+                break;
+        }
+        
+        renderTable(type);
+    }
+
+    // 添加跳转页面函数
+    function jumpToPage(type) {
+        const input = document.getElementById(`${type}-page-input`);
+        const pageNum = parseInt(input.value);
+        const tableState = state[type];
+        const totalPages = Math.ceil(tableState.data.length / PAGE_SIZE);
+        
+        if (isNaN(pageNum) || pageNum < 1 || pageNum > totalPages) {
+            alert(`请输入1到${totalPages}之间的页码`);
+            input.value = '';
+            return;
+        }
+        
+        tableState.currentPage = pageNum;
+        renderTable(type);
+        input.value = ''; // 清空输入框
+    }
+
+    // 为页码输入框添加回车键监听
+    document.addEventListener('DOMContentLoaded', function() {
+        ['parent', 'child'].forEach(type => {
+            const input = document.getElementById(`${type}-page-input`);
+            input.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    jumpToPage(type);
+                }
+            });
+        });
+    });
+
+    // 修改文件上传处理函数
+    document.getElementById('file-upload').addEventListener('change', async function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const response = await fetch('/import_excel', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+            
+            if (data.message) {
+                alert(data.message);
+            }
+
+            // 重新加载表格数据
+            await loadTableData();
+
+        } catch (error) {
+            console.error('Error:', error);
+            alert('导入失败：' + error.message);
+        }
+
+        e.target.value = '';
+    });
+
+    // 修改查询函数，添加验证
+    async function queryBOM() {
+        console.log('开始查询...');
+        const bomCode = document.getElementById('bom-code').value.trim();
+        
+        // 验证输入
+        if (!bomCode) {
+            alert('请输入物料清单编码');
+            return;
+        }
+        
+        // 验证是否为7位数字
+        if (!/^\d{7}$/.test(bomCode)) {
+            alert('物料清单编码必须是7位数字');
+            return;
+        }
+
+        console.log('查询编码:', bomCode);
+        const formData = new FormData();
+        formData.append('bom_code', bomCode);
+
+        try {
+            const response = await fetch('/query_bom', {
+                method: 'POST',
+                body: formData
+            });
+
+            console.log('查询响应状态:', response.status);
+            const data = await response.json();
+            console.log('查询结果:', data);
+            
+            if (data.success) {
+                alert(data.message);
+                // 重新加载表格数据以显示查询结果
+                await loadTableData();
+            } else {
+                alert('查询失败：' + data.message);
+            }
+        } catch (error) {
+            console.error('查询错误:', error);
+            alert('查询失败：' + error.message);
+        }
+    }
+
+    // 添加输入框的实时验证
+    document.getElementById('bom-code').addEventListener('input', function(e) {
+        // 移除非数字字符
+        this.value = this.value.replace(/[^\d]/g, '');
+        
+        // 限制长度为7位
+        if (this.value.length > 7) {
+            this.value = this.value.slice(0, 7);
+        }
+    });
+
+    // 回车键触发查询
+    document.getElementById('bom-code').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault(); // 阻止默认的回车行为
+            queryBOM();
+        }
+    });
+
+    // 添加清除查询函数
+    async function clearQuery() {
+        // 清除输入框
+        document.getElementById('bom-code').value = '';
+        
+        try {
+            // 删除视图，恢复默认表格显示
+            const response = await fetch('/clear_query', {
+                method: 'POST'
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                // 重新加载表格数据
+                await loadTableData();
+            } else {
+                alert('清除查询失败：' + data.message);
+            }
+        } catch (error) {
+            console.error('清除查询错误:', error);
+            alert('清除查询失败：' + error.message);
+        }
+    }
+
+    // 确保页面加载时执行初始数据加载
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('页面加载完成，开始加载默认数据...');
+        clearQuery(); // 确保加载默认数据
+    });
+
+    // 添加到右侧表格的函数
+    function addToSelectedTable(row) {
+        const tbody = document.querySelector('#selected-table tbody');
+        const tr = document.createElement('tr');
+        
+        // 检查是否已经存在相同的物料清单编码
+        const existingRows = tbody.querySelectorAll('tr');
+        for (let existingRow of existingRows) {
+            if (existingRow.cells[0].textContent === row.物料清单编码) {
+                alert('该物料已经添加过了');
+                return;
+            }
+        }
+
+        // 添加物料清单编码
+        const codeTd = document.createElement('td');
+        codeTd.textContent = row.物料清单编码;
+        tr.appendChild(codeTd);
+
+        // 添加父件商品
+        const productTd = document.createElement('td');
+        productTd.textContent = row.父件商品;
+        tr.appendChild(productTd);
+
+        // 添加需求数量输入框
+        const quantityTd = document.createElement('td');
+        const quantityInput = document.createElement('input');
+        quantityInput.type = 'number';
+        quantityInput.className = 'quantity-input';
+        quantityInput.min = '1';
+        quantityInput.value = '1';
+        quantityInput.onkeypress = (e) => {
+            // 只允许输入数字
+            if (!/\d/.test(e.key)) {
+                e.preventDefault();
+            }
+        };
+        quantityInput.oninput = () => {
+            // 移除非数字字符并确保为正整数
+            quantityInput.value = quantityInput.value.replace(/[^\d]/g, '');
+            if (quantityInput.value === '0' || quantityInput.value === '') {
+                quantityInput.value = '1';
+            }
+        };
+        quantityTd.appendChild(quantityInput);
+        tr.appendChild(quantityTd);
+
+        // 添加删除按钮
+        const actionTd = document.createElement('td');
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'delete-btn';
+        deleteBtn.textContent = '删除';
+        deleteBtn.onclick = () => tr.remove();
+        actionTd.appendChild(deleteBtn);
+        tr.appendChild(actionTd);
+
+        tbody.appendChild(tr);
+    }
+
+    // 修改导出函数
+    async function exportResults() {
+        const tbody = document.querySelector('#selected-table tbody');
+        const rows = tbody.querySelectorAll('tr');
+        
+        if (rows.length === 0) {
+            alert('没有数据需要导出');
+            return;
+        }
+
+        // 创建加载提示
+        const loadingMsg = document.createElement('div');
+        loadingMsg.style.position = 'fixed';
+        loadingMsg.style.top = '50%';
+        loadingMsg.style.left = '50%';
+        loadingMsg.style.transform = 'translate(-50%, -50%)';
+        loadingMsg.style.padding = '20px';
+        loadingMsg.style.background = 'white';
+        loadingMsg.style.border = '1px solid #ccc';
+        loadingMsg.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
+        loadingMsg.style.zIndex = '9999';
+        loadingMsg.style.borderRadius = '4px';
+        document.body.appendChild(loadingMsg);
+
+        // 更新加载提示文本
+        function updateLoadingMessage(message) {
+            loadingMsg.textContent = message;
+        }
+
+        try {
+            updateLoadingMessage('正在准备导出数据...');
+
+            // 收集数据
+            const exportData = {};
+            rows.forEach(row => {
+                const bomCode = row.cells[0].textContent;
+                const quantity = row.querySelector('.quantity-input').value;
+                exportData[bomCode] = parseInt(quantity);
+            });
+
+            updateLoadingMessage('正在处理数据，请稍候...');
+
+            // 设置超时
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => {
+                controller.abort();
+                throw new Error('导出操作超时，请重试');
+            }, 120000); // 增加到120秒
+
+            const response = await fetch('/export_statistics', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(exportData),
+                signal: controller.signal
+            });
+
+            clearTimeout(timeoutId);
+
+            if (!response.ok) {
+                if (response.status === 504) {
+                    throw new Error('导出操作超时，请重试');
+                }
+                const errorData = await response.json();
+                throw new Error(errorData.message || `导出失败：HTTP ${response.status}`);
+            }
+
+            const result = await response.json();
+            
+            if (result.success) {
+                alert('导出成功！请在选择的文件夹中查看导出的Excel文件。');
+            } else {
+                throw new Error(result.message || '导出失败：未知错误');
+            }
+        } catch (error) {
+            console.error('导出错误:', error);
+            alert('导出失败：' + (error.message || '未知错误') + '\n请重试');
+        } finally {
+            // 移除加载提示
+            if (loadingMsg && loadingMsg.parentNode) {
+                loadingMsg.remove();
+            }
+        }
+    }
+    </script>
+</body>
+</html> 

@@ -1,0 +1,170 @@
+.container {
+    display: flex;
+    height: 100vh;
+}
+
+.sidebar {
+    width: 250px;
+    background-color: #f5f5f5;
+    padding: 20px;
+    border-right: 1px solid #ddd;
+    overflow-y: auto;
+}
+
+.main-content {
+    flex: 1;
+    padding: 20px;
+}
+
+/* 树形结构样式 */
+.category-tree ul {
+    list-style-type: none;
+    padding-left: 20px;
+}
+
+.category-tree li {
+    margin: 5px 0;
+}
+
+.nested {
+    display: none;
+}
+
+.active {
+    display: block;
+}
+
+.caret {
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+    padding-left: 20px;
+}
+
+.no-caret {
+    padding-left: 20px;
+}
+
+.caret::before {
+    content: "▶";
+    color: #333;
+    position: absolute;
+    left: 0;
+    transition: transform 0.2s ease;
+}
+
+.caret-down::before {
+    transform: rotate(90deg);
+}
+
+/* 表格样式 */
+#inventory-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#inventory-table th,
+#inventory-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+#inventory-table th {
+    background-color: #f8f9fa;
+}
+
+/* 悬停效果 */
+.category-tree span:hover {
+    color: #007bff;
+}
+
+/* 表格相关样式 */
+#inventory-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+#inventory-table th,
+#inventory-table td {
+    padding: 12px;
+    text-align: left;
+    border: 1px solid #ddd;
+}
+
+#inventory-table th {
+    background-color: #f8f9fa;
+    font-weight: bold;
+}
+
+#inventory-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+#inventory-table tr:hover {
+    background-color: #f5f5f5;
+}
+
+.loading, .error, .empty {
+    text-align: center;
+    padding: 20px;
+}
+
+.loading {
+    color: #666;
+}
+
+.error {
+    color: #dc3545;
+}
+
+.empty {
+    color: #666;
+    font-style: italic;
+}
+
+/* 按钮样式 */
+#inventory-table button {
+    margin: 0 4px;
+    padding: 4px 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: #fff;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+#inventory-table button:hover {
+    background-color: #f8f9fa;
+    border-color: #999;
+}
+
+/* 添加响应式支持 */
+@media screen and (max-width: 768px) {
+    #inventory-table {
+        display: block;
+        overflow-x: auto;
+    }
+}
+
+.error-page {
+    text-align: center;
+    padding: 50px;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.error-page h1 {
+    color: #dc3545;
+    margin-bottom: 20px;
+}
+
+.error-page a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.error-page a:hover {
+    text-decoration: underline;
+}

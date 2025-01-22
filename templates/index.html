@@ -1,0 +1,107 @@
+{% macro render_category_tree(category) %}
+    <li>
+        {% if category.children and category.children|length > 0 %}
+            <span class="caret" data-category="{{ category.name }}" title="{{ category.path }}">
+                {{ category.name }}
+            </span>
+            <ul class="nested">
+                {% for child in category.children|sort(attribute='name') %}
+                    {{ render_category_tree(child) }}
+                {% endfor %}
+            </ul>
+        {% else %}
+            <span class="no-caret" data-category="{{ category.name }}" title="{{ category.path }}">
+                {{ category.name }}
+            </span>
+        {% endif %}
+    </li>
+{% endmacro %}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>产品分类管理</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <div class="tree-view">
+                <ul id="category-tree">
+                    {% for category in categories|sort(attribute='name') %}
+                        {{ render_category_tree(category) }}
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        <div class="main-content">
+            <table id="inventory-table">
+                <thead>
+                    <tr>
+                        <th>商品编码</th>
+                        <th>商品名称</th>
+                        <th>商品分类</th>
+                        <th>规格型号</th>
+                        <th>计量单位</th>
+                        <th>基准批发价</th>
+                        <th>参考成本</th>
+                        <th>默认供应商</th>
+                        <th>默认仓库</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="9" class="empty">请选择一个分类</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
+
+<style>
+    .container {
+        display: flex;
+        height: 100vh;
+    }
+    
+    .sidebar {
+        width: 300px;
+        border-right: 1px solid #ddd;
+        overflow-y: auto;
+    }
+    
+    .main-content {
+        flex: 1;
+        padding: 20px;
+        overflow-x: auto;
+    }
+    
+    .tree-view {
+        padding: 10px;
+    }
+    
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    th, td {
+        padding: 8px;
+        border: 1px solid #ddd;
+        text-align: left;
+    }
+    
+    th {
+        background-color: #f5f5f5;
+    }
+    
+    .empty {
+        text-align: center;
+        color: #666;
+    }
+</style>
