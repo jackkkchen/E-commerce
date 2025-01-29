@@ -3,6 +3,12 @@ import json
 import sys
 import traceback
 import os
+
+# 添加项目根目录到 Python 路径
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.dirname(current_dir)
+sys.path.append(project_root)
+
 from app.utils import connect_db
 
 # 设置环境变量以强制使用 UTF-8 编码
